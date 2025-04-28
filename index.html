@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Esfera IA</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.png">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('Service Worker registrado'))
+        .catch(error => console.log('Erro no Service Worker', error));
+    }
+  </script>
+  <style>
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, #0f0f0f, #1f1f1f);
+      font-family: 'Arial', sans-serif;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    .chat { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+    #messages { padding: 10px; overflow-y: auto; }
+    .user, .bot { max-width: 70%; margin: 5px; padding: 10px; border-radius: 15px; line-height: 1.4; animation: fadeIn 0.5s; }
+    .user { background: #007BFF; align-self: flex-end; }
+    .bot { background: #333; align-self: flex-start; }
+    .input { display: flex; background: #222; padding: 10px; }
+    input { flex: 1; padding: 10px; border-radius: 5px; border: none; background: #333; color: white; }
+    button { margin-left: 10px; background: #28a745; border: none; border-radius: 5px; color: white; padding: 10px 15px; cursor: pointer; }
+    button:hover { background: #218838; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+<div class="chat">
+  <div id="messages"></div>
+  <div class="input">
+    <input id="inputMessage" type="text" placeholder="Fale com a Esfera..." autocomplete="off">
+    <button onclick="sendMessage()">Enviar</button>
+  </div>
+</div>
+
+<script>
+let userName = localStorage.getItem('userName') || null;
+let messages = JSON.parse(localStorage.getItem('messages')) || [];
+
+window.onload = () => {
+  messages.forEach(m => addMessage(m.text, m.sender));
+  if (!userName) {
+    addMessage("Olá, humano curioso! Qual é o seu nome?", "bot");
+  }
+};
+
+function sendMessage() {
+  const input = document.getElementById('inputMessage');
+  const text = input.value.trim();
+  if (text === "") return;
+
+  addMessage(text, "user");
+  messages.push({ text, sender: "user" });
+  localStorage.setItem('messages', JSON.stringify(messages));
+  input.value = "";
+
+  setTimeout(() => processMessage(text), 500);
+}
+
+function addMessage(text, sender) {
+  const div = document.createElement('div');
+  div.className = sender;
+  div.textContent = text;
+  document.getElementById('messages').appendChild(div);
+  document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+}
+
+function randomGreeting() {
+  const greetings = ["Olá, humano curioso!", "Oi, viajante do espaço!", "Saudações, criatura de carbono!", "E aí, ser pensante!", "Alô, explorador das ideias!"];
+  return greetings[Math.floor(Math.random() * greetings.length)];
+}
+
+function randomSarcasm() {
+  const sarcasticReplies = ["Hmm, que pergunta profunda...", "Talvez um dia eu descubra... ou não.", "Essa pergunta é tão misteriosa que só um mago poderia responder.", "Deixa eu consultar minha bola de cristal invisível.", "Nem Freud explicaria isso, humano."];
+  return sarcasticReplies[Math.floor(Math.random() * sarcasticReplies.length)];
+}
+
+function processMessage(text) {
+  let response = "";
+  const lower = text.toLowerCase();
+  const now = new Date();
+
+  if (!userName) {
+    userName = text;
+    localStorage.setItem('userName', userName);
+    response = `${randomGreeting()} Muito prazer, ${userName}! Vamos conversar!`;
+  } else if (lower.includes("hora") || lower.includes("horas")) {
+    response = `${randomGreeting()} Agora são ${now.getHours()} horas e ${now.getMinutes()} minutos.`;
+  } else if (lower.includes("data") || lower.includes("dia")) {
+    response = `${randomGreeting()} Hoje é ${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}.`;
+  } else if (lower.includes("quem é você")) {
+    response = `${randomGreeting()} Eu sou a Esfera, sua IA cheia de estilo.`;
+  } else if (lower.includes("me reconhece") || lower.includes("quem sou eu")) {
+    response = `${randomGreeting()} Claro que sim, ${userName}! Como esquecer?`;
+  } else {
+    response = `${randomGreeting()} ${randomSarcasm()}`;
+  }
+
+  addMessage(response, "bot");
+  messages.push({ text: response, sender: "bot" });
+  localStorage.setItem('messages', JSON.stringify(messages));
+}
+</script>
+
+</body>
+</html>
